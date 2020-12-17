@@ -899,8 +899,8 @@ pub fn partition_at_index<T, F>(
 where
     F: FnMut(&T, &T) -> Option<bool>,
 {
-    use cmp::Ordering::Greater;
-    use cmp::Ordering::Less;
+    //use cmp::Ordering::Greater;
+    //use cmp::Ordering::Less;
 
     if index >= v.len() {
         panic!(
@@ -915,23 +915,45 @@ where
     } else if index == v.len() - 1 {
         // Find max element and place it in the last position of the array. We're free to use
         // `unwrap()` here because we know v must not be empty.
-        todo!();
-        // let (max_index, _) = v
-        //     .iter()
-        //     .enumerate()
-        //     .max_by(|&(_, x), &(_, y)| match is_less(x, y) { None => None, Some(true) => Less , Some(false) => Greater })
-        //     .unwrap();
-        // v.swap(max_index, index);
+        if let Some((max_index, _)) = v
+            .iter()
+            .enumerate()
+            .fold(
+                Some(None),
+                |max: Option<Option<(usize, &T)>>, next| match (max, next) {
+                    (None, _) => None,
+                    (Some(Some(m)), n) if !is_less(&m.1, n.1)? => Some(Some(n)),
+                    (m, _) => m,
+                },
+            )
+            //.max_by(|&(_, x), &(_, y)| match is_less(x, y) { None => None, Some(true) => Less , Some(false) => Greater })
+            .flatten()
+        {
+            v.swap(max_index, index)
+        } else {
+            return None;
+        }
     } else if index == 0 {
         // Find min element and place it in the first position of the array. We're free to use
         // `unwrap()` here because we know v must not be empty.
-        todo!();
-        // let (min_index, _) = v
-        //     .iter()
-        //     .enumerate()
-        //     .min_by(|&(_, x), &(_, y)| if is_less(x, y) { Less } else { Greater })
-        //     .unwrap();
-        // v.swap(min_index, index);
+        if let Some((min_index, _)) = v
+            .iter()
+            .enumerate()
+            .fold(
+                Some(None),
+                |min: Option<Option<(usize, &T)>>, next| match (min, next) {
+                    (None, _) => None,
+                    (Some(Some(m)), n) if is_less(&m.1, n.1)? => Some(Some(n)),
+                    (m, _) => m,
+                },
+            )
+            //.min_by(|&(_, x), &(_, y)| if is_less(x, y) { Less } else { Greater })
+            .flatten()
+        {
+            v.swap(min_index, index)
+        } else {
+            return None;
+        }
     } else {
         partition_at_index_loop(v, index, &mut is_less, None);
     }

@@ -6,22 +6,30 @@ pub trait TrySort<T> {
     fn try_sort(&mut self) -> Result<(), SortError>
     where
         T: PartialOrd<T>;
+
     fn try_sort_by<F>(&mut self, compare: F) -> Result<(), SortError>
     where
         F: FnMut(&T, &T) -> Option<bool>;
+
     fn try_sort_by_key<K, F>(&mut self, compare: F) -> Result<(), SortError>
     where
         F: FnMut(&T) -> Option<K>,
         K: PartialOrd<K>;
 
+    #[doc(hidden)]
+    ///may not work yet
     fn try_sort_unstable(&mut self) -> Result<(), SortError>
     where
         T: PartialOrd<T>;
 
+    #[doc(hidden)]
+    ///may not work yet
     fn try_sort_unstable_by<F>(&mut self, compare: F) -> Result<(), SortError>
     where
         F: FnMut(&T, &T) -> Option<bool>;
 
+    #[doc(hidden)]
+    ///may not work yet
     fn try_sort_unstable_by_key<K, F>(&mut self, compare: F) -> Result<(), SortError>
     where
         F: FnMut(&T) -> Option<K>,
@@ -44,19 +52,17 @@ impl<T> TrySort<T> for [T] {
     where
         T: PartialOrd,
     {
-        from_std::merge_sort(self, |a, b| match a.partial_cmp(b) {
-            None => None,
-            Some(Ordering::Less) => Some(true),
-            _ => Some(false),
-        })
-        .ok_or(SortError)
+        from_std::merge_sort(self, |a, b| a.partial_cmp(b).map(|a| a == Ordering::Less))
+            .ok_or(SortError)
     }
+
     fn try_sort_by<F>(&mut self, compare: F) -> Result<(), SortError>
     where
         F: FnMut(&T, &T) -> Option<bool>,
     {
         from_std::merge_sort(self, compare).ok_or(SortError)
     }
+
     fn try_sort_by_key<K, F>(&mut self, f: F) -> Result<(), SortError>
     where
         F: FnMut(&T) -> Option<K>,
@@ -75,22 +81,30 @@ impl<T> TrySort<T> for [T] {
     where
         T: PartialOrd<T>,
     {
-        todo!()
+        //todo!()
+        from_std_quicksort::quicksort(self, |a, b| a.partial_cmp(b).map(|a| a == Ordering::Less))
+            .ok_or(SortError)
     }
 
     fn try_sort_unstable_by<F>(&mut self, compare: F) -> Result<(), SortError>
     where
         F: FnMut(&T, &T) -> Option<bool>,
     {
-        todo!()
+        from_std_quicksort::quicksort(self, compare).ok_or(SortError)
     }
 
-    fn try_sort_unstable_by_key<K, F>(&mut self, compare: F) -> Result<(), SortError>
+    fn try_sort_unstable_by_key<K, F>(&mut self, f: F) -> Result<(), SortError>
     where
         F: FnMut(&T) -> Option<K>,
         K: PartialOrd<K>,
     {
-        todo!()
+        let mut f2 = f;
+        from_std_quicksort::quicksort(self, |a, b| match f2(a).partial_cmp(&f2(b)) {
+            None => None,
+            Some(Ordering::Less) => Some(true),
+            _ => Some(false),
+        })
+        .ok_or(SortError)
     }
 }
 
