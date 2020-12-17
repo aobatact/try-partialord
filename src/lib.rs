@@ -1,21 +1,48 @@
+#![feature(maybe_uninit_slice,is_sorted)]
+
 use core::cmp::Ordering;
+use core::fmt::{Display, Error, Formatter};
+//mod from_std_quicksort;
 
 pub trait TrySort<T> {
-    fn try_sort(&mut self) -> Option<()>
+    fn try_sort(&mut self) -> Result<(), SortError>
     where
         T: PartialOrd<T>;
-    fn try_sort_by<F>(&mut self, compare: F) -> Option<()>
+    fn try_sort_by<F>(&mut self, compare: F) -> Result<(), SortError>
     where
         F: FnMut(&T, &T) -> Option<bool>;
-    fn try_sort_by_key<K, F>(&mut self, compare: F) -> Option<()>
+    fn try_sort_by_key<K, F>(&mut self, compare: F) -> Result<(), SortError>
+    where
+        F: FnMut(&T) -> Option<K>,
+        K: PartialOrd<K>;
+
+    fn try_sort_unstable(&mut self) -> Result<(), SortError>
+    where
+        T: PartialOrd<T>;
+
+    fn try_sort_unstable_by<F>(&mut self, compare: F) -> Result<(), SortError>
+    where
+        F: FnMut(&T, &T) -> Option<bool>;
+
+    fn try_sort_unstable_by_key<K, F>(&mut self, compare: F) -> Result<(), SortError>
     where
         F: FnMut(&T) -> Option<K>,
         K: PartialOrd<K>;
 }
 
+#[derive(Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Default, Debug)]
+pub struct SortError;
+
+impl Display for SortError {
+    fn fmt(&self, fmt: &mut Formatter<'_>) -> Result<(), Error> {
+        fmt.write_str("Sort failed because of uncompareable values")
+    }
+}
+
+impl std::error::Error for SortError {}
 
 impl<T> TrySort<T> for [T] {
-    fn try_sort(&mut self) -> std::option::Option<()>
+    fn try_sort(&mut self) -> Result<(), SortError>
     where
         T: PartialOrd,
     {
@@ -24,14 +51,15 @@ impl<T> TrySort<T> for [T] {
             Some(Ordering::Less) => Some(true),
             _ => Some(false),
         })
+        .ok_or(SortError)
     }
-    fn try_sort_by<F>(&mut self, compare: F) -> Option<()>
+    fn try_sort_by<F>(&mut self, compare: F) -> Result<(), SortError>
     where
         F: FnMut(&T, &T) -> Option<bool>,
     {
-        from_std::merge_sort(self, compare)
-    } 
-    fn try_sort_by_key<K, F>(&mut self, f: F) -> Option<()>
+        from_std::merge_sort(self, compare).ok_or(SortError)
+    }
+    fn try_sort_by_key<K, F>(&mut self, f: F) -> Result<(), SortError>
     where
         F: FnMut(&T) -> Option<K>,
         K: PartialOrd<K>,
@@ -42,6 +70,29 @@ impl<T> TrySort<T> for [T] {
             Some(Ordering::Less) => Some(true),
             _ => Some(false),
         })
+        .ok_or(SortError)
+    }
+
+    fn try_sort_unstable(&mut self) -> Result<(), SortError>
+    where
+        T: PartialOrd<T>,
+    {
+        todo!()
+    }
+
+    fn try_sort_unstable_by<F>(&mut self, compare: F) -> Result<(), SortError>
+    where
+        F: FnMut(&T, &T) -> Option<bool>,
+    {
+        todo!()
+    }
+
+    fn try_sort_unstable_by_key<K, F>(&mut self, compare: F) -> Result<(), SortError>
+    where
+        F: FnMut(&T) -> Option<K>,
+        K: PartialOrd<K>,
+    {
+        todo!()
     }
 }
 
@@ -424,8 +475,26 @@ mod from_std {
 
 #[cfg(test)]
 mod tests {
+    use crate::*;
+    use rand::prelude::*;
+    use rand::distributions::Standard;
+
     #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
+    fn try_sort_ok() {
+        let rng = thread_rng();
+        let mut v : Vec<f32> = Standard.sample_iter(rng).take(100).collect();
+        let res = (&mut v).try_sort();
+        assert!(res.is_ok());
+        assert!(v.is_sorted())
+    }
+
+    #[test]
+    fn try_sort_error() {
+        let rng = thread_rng();
+        let mut v : Vec<f32> = Standard.sample_iter(rng).take(100).collect();
+        v.push(f32::NAN);
+        let res = (&mut v).try_sort();
+        assert!(res.is_err());
+        assert!(!v.is_sorted())
     }
 }
