@@ -679,34 +679,33 @@ where
     if len >= 8 {
         // Swaps indices so that `v[a] <= v[b]`.
         let mut sort2 = |a: &mut usize, b: &mut usize| unsafe {
-            if (is_less(v.get_unchecked(*b), v.get_unchecked(*a)))? {
+            if is_less(v.get_unchecked(*b), v.get_unchecked(*a))? {
                 ptr::swap(a, b);
                 swaps += 1;
             }
+            Some(())
         };
 
         // Swaps indices so that `v[a] <= v[b] <= v[c]`.
         let mut sort3 = |a: &mut usize, b: &mut usize, c: &mut usize| {
-            sort2(a, b);
-            sort2(b, c);
-            sort2(a, b);
+            sort2(a, b).and(sort2(b, c)).and(sort2(a, b))
         };
 
         if len >= SHORTEST_MEDIAN_OF_MEDIANS {
             // Finds the median of `v[a - 1], v[a], v[a + 1]` and stores the index into `a`.
             let mut sort_adjacent = |a: &mut usize| {
                 let tmp = *a;
-                sort3(&mut (tmp - 1), a, &mut (tmp + 1));
+                sort3(&mut (tmp - 1), a, &mut (tmp + 1))
             };
 
             // Find medians in the neighborhoods of `a`, `b`, and `c`.
-            sort_adjacent(&mut a);
-            sort_adjacent(&mut b);
-            sort_adjacent(&mut c);
+            sort_adjacent(&mut a)?;
+            sort_adjacent(&mut b)?;
+            sort_adjacent(&mut c)?;
         }
 
         // Find the median among `a`, `b`, and `c`.
-        sort3(&mut a, &mut b, &mut c);
+        sort3(&mut a, &mut b, &mut c)?;
     }
 
     Some(if swaps < MAX_SWAPS {
@@ -828,7 +827,7 @@ where
     // Limit the number of imbalanced partitions to `floor(log2(len)) + 1`.
     let limit = mem::size_of::<usize>() as u32 * 8 - v.len().leading_zeros();
 
-    recurse(v, &mut is_less, None, limit);
+    recurse(v, &mut is_less, None, limit)
 }
 
 fn partition_at_index_loop<'a, T, F>(
@@ -887,7 +886,7 @@ where
         } else {
             // If mid == index, then we're done, since partition() guaranteed that all elements
             // after mid are greater than or equal to mid.
-            return;
+            return Some(());
         }
     }
 }
@@ -916,21 +915,23 @@ where
     } else if index == v.len() - 1 {
         // Find max element and place it in the last position of the array. We're free to use
         // `unwrap()` here because we know v must not be empty.
-        let (max_index, _) = v
-            .iter()
-            .enumerate()
-            .max_by(|&(_, x), &(_, y)| match is_less(x, y) { None => None, Some(true) => Less , Some(false) => Greater })
-            .unwrap();
-        v.swap(max_index, index);
+        todo!();
+        // let (max_index, _) = v
+        //     .iter()
+        //     .enumerate()
+        //     .max_by(|&(_, x), &(_, y)| match is_less(x, y) { None => None, Some(true) => Less , Some(false) => Greater })
+        //     .unwrap();
+        // v.swap(max_index, index);
     } else if index == 0 {
         // Find min element and place it in the first position of the array. We're free to use
         // `unwrap()` here because we know v must not be empty.
-        let (min_index, _) = v
-            .iter()
-            .enumerate()
-            .min_by(|&(_, x), &(_, y)| if is_less(x, y) { Less } else { Greater })
-            .unwrap();
-        v.swap(min_index, index);
+        todo!();
+        // let (min_index, _) = v
+        //     .iter()
+        //     .enumerate()
+        //     .min_by(|&(_, x), &(_, y)| if is_less(x, y) { Less } else { Greater })
+        //     .unwrap();
+        // v.swap(min_index, index);
     } else {
         partition_at_index_loop(v, index, &mut is_less, None);
     }
