@@ -16,20 +16,14 @@ pub trait TrySort<T> {
         F: FnMut(&T) -> Option<K>,
         K: PartialOrd<K>;
 
-    #[doc(hidden)]
-    ///may not work yet
     fn try_sort_unstable(&mut self) -> Result<(), SortError>
     where
         T: PartialOrd<T>;
 
-    #[doc(hidden)]
-    ///may not work yet
     fn try_sort_unstable_by<F>(&mut self, compare: F) -> Result<(), SortError>
     where
         F: FnMut(&T, &T) -> Option<bool>;
 
-    #[doc(hidden)]
-    ///may not work yet
     fn try_sort_unstable_by_key<K, F>(&mut self, compare: F) -> Result<(), SortError>
     where
         F: FnMut(&T) -> Option<K>,
@@ -41,7 +35,7 @@ pub struct SortError;
 
 impl Display for SortError {
     fn fmt(&self, fmt: &mut Formatter<'_>) -> Result<(), Error> {
-        fmt.write_str("Sort failed because of uncompareable values")
+        fmt.write_str("Sort failed because of uncompareable value")
     }
 }
 
@@ -69,10 +63,8 @@ impl<T> TrySort<T> for [T] {
         K: PartialOrd<K>,
     {
         let mut f2 = f;
-        from_std::merge_sort(self, |a, b| match f2(a).partial_cmp(&f2(b)) {
-            None => None,
-            Some(Ordering::Less) => Some(true),
-            _ => Some(false),
+        from_std::merge_sort(self, |a, b| {
+            f2(a).partial_cmp(&f2(b)).map(|a| a == Ordering::Less)
         })
         .ok_or(SortError)
     }
@@ -81,7 +73,6 @@ impl<T> TrySort<T> for [T] {
     where
         T: PartialOrd<T>,
     {
-        //todo!()
         from_std_quicksort::quicksort(self, |a, b| a.partial_cmp(b).map(|a| a == Ordering::Less))
             .ok_or(SortError)
     }
@@ -99,10 +90,8 @@ impl<T> TrySort<T> for [T] {
         K: PartialOrd<K>,
     {
         let mut f2 = f;
-        from_std_quicksort::quicksort(self, |a, b| match f2(a).partial_cmp(&f2(b)) {
-            None => None,
-            Some(Ordering::Less) => Some(true),
-            _ => Some(false),
+        from_std_quicksort::quicksort(self, |a, b| {
+            f2(a).partial_cmp(&f2(b)).map(|a| a == Ordering::Less)
         })
         .ok_or(SortError)
     }
@@ -495,7 +484,7 @@ mod tests {
     fn try_sort_ok() {
         let rng = thread_rng();
         let mut v: Vec<f32> = Standard.sample_iter(rng).take(100).collect();
-        let res = (&mut v).try_sort();
+        let res = v.try_sort();
         assert!(res.is_ok());
         assert!(v.is_sorted())
     }
@@ -505,7 +494,7 @@ mod tests {
         let rng = thread_rng();
         let mut v: Vec<f32> = Standard.sample_iter(rng).take(100).collect();
         v.push(f32::NAN);
-        let res = (&mut v).try_sort();
+        let res = v.try_sort();
         assert!(res.is_err());
         assert!(!v.is_sorted())
     }

@@ -918,12 +918,12 @@ where
         if let Some((max_index, _)) = v
             .iter()
             .enumerate()
-            .fold(
-                Some(None),
-                |max: Option<Option<(usize, &T)>>, next| match (max, next) {
+            .try_fold(
+                None,
+                |max: Option<(usize, &T)>, next| match (max, next) {
                     (None, _) => None,
-                    (Some(Some(m)), n) if !is_less(&m.1, n.1)? => Some(Some(n)),
-                    (m, _) => m,
+                    (Some(m), n) if !is_less(m.1, n.1)? => Some(Some(n)),
+                    (m, _) => Some(m),
                 },
             )
             //.max_by(|&(_, x), &(_, y)| match is_less(x, y) { None => None, Some(true) => Less , Some(false) => Greater })
@@ -939,12 +939,12 @@ where
         if let Some((min_index, _)) = v
             .iter()
             .enumerate()
-            .fold(
-                Some(None),
-                |min: Option<Option<(usize, &T)>>, next| match (min, next) {
+            .try_fold(
+                None,
+                |min: Option<(usize, &T)>, next| match (min, next) {
                     (None, _) => None,
-                    (Some(Some(m)), n) if is_less(&m.1, n.1)? => Some(Some(n)),
-                    (m, _) => m,
+                    (Some(m), n) if is_less(m.1, n.1)? => Some(Some(n)),
+                    (m, _) => Some(m),
                 },
             )
             //.min_by(|&(_, x), &(_, y)| if is_less(x, y) { Less } else { Greater })
