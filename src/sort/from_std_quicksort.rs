@@ -830,6 +830,7 @@ where
     recurse(v, &mut is_less, None, limit)
 }
 
+/*
 fn partition_at_index_loop<'a, T, F>(
     mut v: &'a mut [T],
     mut index: usize,
@@ -918,14 +919,11 @@ where
         if let Some((max_index, _)) = v
             .iter()
             .enumerate()
-            .try_fold(
-                None,
-                |max: Option<(usize, &T)>, next| match (max, next) {
-                    (None, _) => None,
-                    (Some(m), n) if !is_less(m.1, n.1)? => Some(Some(n)),
-                    (m, _) => Some(m),
-                },
-            )
+            .try_fold(None, |max: Option<(usize, &T)>, next| match (max, next) {
+                (None, _) => None,
+                (Some(m), n) if !is_less(m.1, n.1)? => Some(Some(n)),
+                (m, _) => Some(m),
+            })
             //.max_by(|&(_, x), &(_, y)| match is_less(x, y) { None => None, Some(true) => Less , Some(false) => Greater })
             .flatten()
         {
@@ -939,14 +937,11 @@ where
         if let Some((min_index, _)) = v
             .iter()
             .enumerate()
-            .try_fold(
-                None,
-                |min: Option<(usize, &T)>, next| match (min, next) {
-                    (None, _) => None,
-                    (Some(m), n) if is_less(m.1, n.1)? => Some(Some(n)),
-                    (m, _) => Some(m),
-                },
-            )
+            .try_fold(None, |min: Option<(usize, &T)>, next| match (min, next) {
+                (None, _) => None,
+                (Some(m), n) if is_less(m.1, n.1)? => Some(Some(n)),
+                (m, _) => Some(m),
+            })
             //.min_by(|&(_, x), &(_, y)| if is_less(x, y) { Less } else { Greater })
             .flatten()
         {
@@ -963,3 +958,4 @@ where
     let pivot = &mut pivot[0];
     Some((left, pivot, right))
 }
+*/
