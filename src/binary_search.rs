@@ -80,3 +80,35 @@ where
         return None;
     }
 }
+
+#[cfg(test)]
+#[cfg(feature = "std")]
+mod tests {
+    use crate::*;
+    use rand::distributions::Standard;
+    use rand::prelude::*;
+    use std::print;
+    use std::vec::Vec;
+
+    #[test]
+    fn try_binary_search_ok() {
+        let rng = thread_rng();
+        let mut v: Vec<f32> = Standard.sample_iter(rng).take(100).collect();
+        assert!(v.try_sort().is_ok());
+        let b = random();
+        print!("t {}", b);
+        let i = v.try_binary_search(&b);
+        assert!(i.is_ok());
+        let ik = match i.unwrap() {
+            Ok(o) => o,
+            Err(e) => e,
+        };
+        for sm in v[..ik].iter() {
+            //print!("sm {}",sm);
+            assert!(sm < &b);
+        }
+        for sm in v[ik..].iter() {
+            assert!(sm >= &b);
+        }
+    }
+}
