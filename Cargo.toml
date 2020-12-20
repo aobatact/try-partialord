@@ -1,5 +1,5 @@
 [package]
-name = "try-sort-partialord"
+name = "try-partialord"
 version = "0.1.0"
 authors = ["aobatact <aobatact144@gmail.com>"]
 edition = "2018"

@@ -1,63 +1,55 @@
+use crate::{InvalidOrderError, OrderResult};
 use core::cmp::Ordering;
-use core::fmt::{Display, Error, Formatter};
 mod from_std_quicksort;
 
 pub trait TrySort<T> {
-    fn try_sort(&mut self) -> Result<(), SortError>
+    fn try_sort(&mut self) -> OrderResult<()>
     where
         T: PartialOrd<T>;
 
-    fn try_sort_by<F>(&mut self, compare: F) -> Result<(), SortError>
+    fn try_sort_by<F>(&mut self, compare: F) -> OrderResult<()>
     where
         F: FnMut(&T, &T) -> Option<bool>;
 
-    fn try_sort_by_key<K, F>(&mut self, compare: F) -> Result<(), SortError>
+    fn try_sort_by_key<K, F>(&mut self, compare: F) -> OrderResult<()>
     where
         F: FnMut(&T) -> Option<K>,
         K: PartialOrd<K>;
 
-    fn try_sort_unstable(&mut self) -> Result<(), SortError>
+    fn try_sort_unstable(&mut self) -> OrderResult<()>
     where
         T: PartialOrd<T>;
 
-    fn try_sort_unstable_by<F>(&mut self, compare: F) -> Result<(), SortError>
+    fn try_sort_unstable_by<F>(&mut self, compare: F) -> OrderResult<()>
     where
         F: FnMut(&T, &T) -> Option<bool>;
 
-    fn try_sort_unstable_by_key<K, F>(&mut self, compare: F) -> Result<(), SortError>
+    fn try_sort_unstable_by_key<K, F>(&mut self, compare: F) -> OrderResult<()>
     where
         F: FnMut(&T) -> Option<K>,
         K: PartialOrd<K>;
 }
-
-#[derive(Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Default, Debug)]
-pub struct SortError;
-
-impl Display for SortError {
-    fn fmt(&self, fmt: &mut Formatter<'_>) -> Result<(), Error> {
-        fmt.write_str("Sort failed because of uncompareable value")
-    }
-}
-
-impl std::error::Error for SortError {}
 
 impl<T> TrySort<T> for [T] {
-    fn try_sort(&mut self) -> Result<(), SortError>
+    #[inline]
+    fn try_sort(&mut self) -> OrderResult<()>
     where
         T: PartialOrd,
     {
         from_std::merge_sort(self, |a, b| a.partial_cmp(b).map(|a| a == Ordering::Less))
-            .ok_or(SortError)
+            .ok_or(InvalidOrderError)
     }
 
-    fn try_sort_by<F>(&mut self, compare: F) -> Result<(), SortError>
+    #[inline]
+    fn try_sort_by<F>(&mut self, compare: F) -> OrderResult<()>
     where
         F: FnMut(&T, &T) -> Option<bool>,
     {
-        from_std::merge_sort(self, compare).ok_or(SortError)
+        from_std::merge_sort(self, compare).ok_or(InvalidOrderError)
     }
 
-    fn try_sort_by_key<K, F>(&mut self, f: F) -> Result<(), SortError>
+    #[inline]
+    fn try_sort_by_key<K, F>(&mut self, f: F) -> OrderResult<()>
     where
         F: FnMut(&T) -> Option<K>,
         K: PartialOrd<K>,
@@ -66,25 +58,28 @@ impl<T> TrySort<T> for [T] {
         from_std::merge_sort(self, |a, b| {
             f2(a).partial_cmp(&f2(b)).map(|a| a == Ordering::Less)
         })
-        .ok_or(SortError)
+        .ok_or(InvalidOrderError)
     }
 
-    fn try_sort_unstable(&mut self) -> Result<(), SortError>
+    #[inline]
+    fn try_sort_unstable(&mut self) -> OrderResult<()>
     where
         T: PartialOrd<T>,
     {
         from_std_quicksort::quicksort(self, |a, b| a.partial_cmp(b).map(|a| a == Ordering::Less))
-            .ok_or(SortError)
+            .ok_or(InvalidOrderError)
     }
 
-    fn try_sort_unstable_by<F>(&mut self, compare: F) -> Result<(), SortError>
+    #[inline]
+    fn try_sort_unstable_by<F>(&mut self, compare: F) -> OrderResult<()>
     where
         F: FnMut(&T, &T) -> Option<bool>,
     {
-        from_std_quicksort::quicksort(self, compare).ok_or(SortError)
+        from_std_quicksort::quicksort(self, compare).ok_or(InvalidOrderError)
     }
 
-    fn try_sort_unstable_by_key<K, F>(&mut self, f: F) -> Result<(), SortError>
+    #[inline]
+    fn try_sort_unstable_by_key<K, F>(&mut self, f: F) -> OrderResult<()>
     where
         F: FnMut(&T) -> Option<K>,
         K: PartialOrd<K>,
@@ -93,37 +88,11 @@ impl<T> TrySort<T> for [T] {
         from_std_quicksort::quicksort(self, |a, b| {
             f2(a).partial_cmp(&f2(b)).map(|a| a == Ordering::Less)
         })
-        .ok_or(SortError)
+        .ok_or(InvalidOrderError)
     }
 }
 
 mod from_std {
-    // Mit License from https://github.com/rust-lang/rust
-    //
-    // Permission is hereby granted, free of charge, to any
-    // person obtaining a copy of this software and associated
-    // documentation files (the "Software"), to deal in the
-    // Software without restriction, including without
-    // limitation the rights to use, copy, modify, merge,
-    // publish, distribute, sublicense, and/or sell copies of
-    // the Software, and to permit persons to whom the Software
-    // is furnished to do so, subject to the following
-    // conditions:
-    //
-    // The above copyright notice and this permission notice
-    // shall be included in all copies or substantial portions
-    // of the Software.
-    //
-    // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-    // ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
-    // TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-    // PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
-    // SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-    // CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-    // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
-    // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-    // DEALINGS IN THE SOFTWARE.
-
     use std::{mem, ptr};
 
     /// Inserts `v[0]` into pre-sorted sequence `v[1..]` so that whole `v[..]` becomes sorted.
