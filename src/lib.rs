@@ -36,7 +36,7 @@ mod min_max;
 mod sort;
 pub use binary_search::TryBinarySearch;
 use core::fmt::{Display, Error, Formatter};
-pub use min_max::MinMax;
+pub use min_max::TryMinMax;
 pub use sort::TrySort;
 
 #[derive(Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Default, Debug)]

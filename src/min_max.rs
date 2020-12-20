@@ -1,7 +1,7 @@
 use crate::{InvalidOrderError, OrderResult};
 use core::cmp::Ordering;
 
-pub trait MinMax<T> {
+pub trait TryMinMax<T> {
     fn try_min(&mut self) -> OrderResult<T>
     where
         T: PartialOrd<T>;
@@ -24,7 +24,7 @@ pub trait MinMax<T> {
         K: PartialOrd<K>;
 }
 
-impl<T, Iter> MinMax<T> for Iter
+impl<T, Iter> TryMinMax<T> for Iter
 where
     Iter: Iterator<Item = T>,
 {
