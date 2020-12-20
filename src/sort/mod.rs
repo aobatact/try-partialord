@@ -3,14 +3,17 @@ use core::cmp::Ordering;
 mod from_std_quicksort;
 
 pub trait TrySort<T> {
+    #[cfg(feature = "std")]
     fn try_sort(&mut self) -> OrderResult<()>
     where
         T: PartialOrd<T>;
 
+    #[cfg(feature = "std")]
     fn try_sort_by<F>(&mut self, compare: F) -> OrderResult<()>
     where
         F: FnMut(&T, &T) -> Option<bool>;
 
+    #[cfg(feature = "std")]
     fn try_sort_by_key<K, F>(&mut self, compare: F) -> OrderResult<()>
     where
         F: FnMut(&T) -> Option<K>,
@@ -32,6 +35,7 @@ pub trait TrySort<T> {
 
 impl<T> TrySort<T> for [T] {
     #[inline]
+    #[cfg(feature = "std")]
     fn try_sort(&mut self) -> OrderResult<()>
     where
         T: PartialOrd,
@@ -41,6 +45,7 @@ impl<T> TrySort<T> for [T] {
     }
 
     #[inline]
+    #[cfg(feature = "std")]
     fn try_sort_by<F>(&mut self, compare: F) -> OrderResult<()>
     where
         F: FnMut(&T, &T) -> Option<bool>,
@@ -49,6 +54,7 @@ impl<T> TrySort<T> for [T] {
     }
 
     #[inline]
+    #[cfg(feature = "std")]
     fn try_sort_by_key<K, F>(&mut self, f: F) -> OrderResult<()>
     where
         F: FnMut(&T) -> Option<K>,
@@ -92,7 +98,9 @@ impl<T> TrySort<T> for [T] {
     }
 }
 
+#[cfg(feature = "std")]
 mod from_std {
+    use std::vec::Vec;
     use std::{mem, ptr};
 
     /// Inserts `v[0]` into pre-sorted sequence `v[1..]` so that whole `v[..]` becomes sorted.
@@ -333,7 +341,7 @@ mod from_std {
         // strange decision, but consider the fact that merges more often go in the opposite direction
         // (forwards). According to benchmarks, merging forwards is slightly faster than merging
         // backwards. To conclude, identifying runs by traversing backwards improves performance.
-        let mut runs = vec![];
+        let mut runs = Vec::new();
         let mut end = len;
         while end > 0 {
             // Find the next natural run, and reverse it if it's strictly descending.
@@ -439,10 +447,12 @@ mod from_std {
 }
 
 #[cfg(test)]
+#[cfg(feature = "std")]
 mod tests {
     use crate::sort::*;
     use rand::distributions::Standard;
     use rand::prelude::*;
+    use std::vec::Vec;
 
     #[test]
     fn try_sort_ok() {

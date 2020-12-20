@@ -892,7 +892,7 @@ where
             .iter()
             .enumerate()
             .try_fold(None, |max: Option<(usize, &T)>, next| match (max, next) {
-                (None, _) => None,
+                (None, n) => Some(Some(n)),
                 (Some(m), n) if !is_less(m.1, n.1)? => Some(Some(n)),
                 (m, _) => Some(m),
             })
@@ -910,7 +910,7 @@ where
             .iter()
             .enumerate()
             .try_fold(None, |min: Option<(usize, &T)>, next| match (min, next) {
-                (None, _) => None,
+                (None, n) => Some(Some(n)),
                 (Some(m), n) if is_less(m.1, n.1)? => Some(Some(n)),
                 (m, _) => Some(m),
             })

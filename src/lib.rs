@@ -27,10 +27,14 @@
 // ignore-tidy-undocumented-unsafe
 
 #![feature(maybe_uninit_slice, is_sorted, min_specialization)]
+#![no_std]
+#[cfg(feature = "std")]
+extern crate std;
 
 mod binary_search;
 mod min_max;
 mod sort;
+pub use binary_search::TryBinarySearch;
 use core::fmt::{Display, Error, Formatter};
 pub use min_max::MinMax;
 pub use sort::TrySort;
@@ -44,6 +48,7 @@ impl Display for InvalidOrderError {
     }
 }
 
+#[cfg(feature = "std")]
 impl std::error::Error for InvalidOrderError {}
 
 type OrderResult<T> = Result<T, InvalidOrderError>;
