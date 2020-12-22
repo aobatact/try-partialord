@@ -26,6 +26,30 @@
 
 // ignore-tidy-undocumented-unsafe
 
+//! Helper trait for [`PartialOrd`](`core::cmp::PartialOrd`) like [`f32`], [`f64`] with methods where [`Ord`](`core::cmp::Ord`) is needed like sort, min, max and binarySearch.
+//! These methods are almost same as the methods for Ord, exept that it returns [`InvalidOrderError`] when the [`partial_cmp`](`std::cmp::PartialOrd::partial_cmp`)
+//! returns [`None`](`core::option::Option::None`).
+//! These traits have `try_` methods like [`try_sort`](`TrySort::try_sort`) for `sort`
+//! 
+//! This is safer than using something like `sort_by` with ignoreing None case of [`partial_cmp`](`std::cmp::PartialOrd::partial_cmp`) because it won't panic (if partial_cmp is impremented correctly).
+//! ```
+//! # #![feature(is_sorted)]
+//! use try_partialord::*;
+//! # use rand::distributions::Standard;
+//! # use rand::prelude::*;
+//!
+//! let mut vec: Vec<f32> = Standard.sample_iter(thread_rng()).take(100).collect();
+//! //no NAN in vec so sort should succed
+//! let sort_result = vec.try_sort();
+//! assert!(sort_result.is_ok());
+//! assert!(vec.is_sorted());
+//! vec.push(f32::NAN);
+//! //NAN in vec so sort should fail
+//! let sort_result = vec.try_sort();
+//! assert!(sort_result.is_err());
+//! assert!(!vec.is_sorted());
+//! ```
+
 #![feature(maybe_uninit_slice, is_sorted, min_specialization)]
 #![no_std]
 #[cfg(feature = "std")]
@@ -39,6 +63,7 @@ use core::fmt::{Display, Error, Formatter};
 pub use min_max::TryMinMax;
 pub use sort::TrySort;
 
+/// Error when [`partial_cmp`](`std::cmp::PartialOrd::partial_cmp`) returns [`None`] during the operation.
 #[derive(Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Default, Debug)]
 pub struct InvalidOrderError;
 

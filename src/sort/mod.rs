@@ -2,6 +2,7 @@ use crate::{InvalidOrderError, OrderResult};
 use core::cmp::Ordering;
 mod from_std_quicksort;
 
+/// Sort methods for PratialOrd
 pub trait TrySort<T> {
     #[cfg(feature = "std")]
     fn try_sort(&mut self) -> OrderResult<()>
@@ -14,7 +15,7 @@ pub trait TrySort<T> {
         F: FnMut(&T, &T) -> Option<bool>;
 
     #[cfg(feature = "std")]
-    fn try_sort_by_key<K, F>(&mut self, compare: F) -> OrderResult<()>
+    fn try_sort_by_key<K, F>(&mut self, f: F) -> OrderResult<()>
     where
         F: FnMut(&T) -> Option<K>,
         K: PartialOrd<K>;
@@ -27,7 +28,7 @@ pub trait TrySort<T> {
     where
         F: FnMut(&T, &T) -> Option<bool>;
 
-    fn try_sort_unstable_by_key<K, F>(&mut self, compare: F) -> OrderResult<()>
+    fn try_sort_unstable_by_key<K, F>(&mut self, f: F) -> OrderResult<()>
     where
         F: FnMut(&T) -> Option<K>,
         K: PartialOrd<K>;

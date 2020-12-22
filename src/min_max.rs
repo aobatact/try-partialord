@@ -1,6 +1,7 @@
 use crate::{InvalidOrderError, OrderResult};
 use core::cmp::Ordering;
 
+/// min and max methods for PratialOrd
 pub trait TryMinMax<T> {
     fn try_min(&mut self) -> OrderResult<T>
     where

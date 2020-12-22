@@ -1,6 +1,7 @@
 use crate::{InvalidOrderError, OrderResult};
 use core::cmp::Ordering;
 
+/// Binary Search methods for PratialOrd
 pub trait TryBinarySearch<T> {
     fn try_binary_search(&self, x: &T) -> OrderResult<Result<usize, usize>>
     where
