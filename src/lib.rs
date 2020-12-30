@@ -26,11 +26,11 @@
 
 // ignore-tidy-undocumented-unsafe
 
-//! Helper trait for [`PartialOrd`](`core::cmp::PartialOrd`) like [`f32`], [`f64`] with methods where [`Ord`](`core::cmp::Ord`) is needed like sort, min, max and binarySearch.
+//! Helper traits for [`PartialOrd`](`core::cmp::PartialOrd`) like [`f32`], [`f64`] with methods where [`Ord`](`core::cmp::Ord`) is needed like sort, min, max and binarySearch.
 //! These methods are almost same as the methods for Ord, exept that it returns [`InvalidOrderError`] when the [`partial_cmp`](`std::cmp::PartialOrd::partial_cmp`)
 //! returns [`None`](`core::option::Option::None`).
 //! These traits have `try_` methods like [`try_sort`](`TrySort::try_sort`) for `sort`
-//! 
+//!
 //! This is safer than using something like `sort_by` with ignoreing None case of [`partial_cmp`](`std::cmp::PartialOrd::partial_cmp`) because it won't panic (if partial_cmp is impremented correctly).
 //! ```
 //! # #![feature(is_sorted)]
@@ -77,3 +77,29 @@ impl Display for InvalidOrderError {
 impl std::error::Error for InvalidOrderError {}
 
 type OrderResult<T> = Result<T, InvalidOrderError>;
+
+/*
+pub trait HasOnlyInvalidOrderValue {
+    fn is_invalid(&self) -> bool;
+    fn as_ordered(self) -> Option<Ordered<Self>>
+    where
+        Self: Sized,
+    {
+        if self.is_invalid() {
+            Some(Ordered(self))
+        } else {
+            None
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd)]
+pub struct Ordered<T>(T);
+
+impl<T: core::cmp::PartialEq> Eq for Ordered<T> {}
+impl<T: core::cmp::PartialOrd> Ord for Ordered<T> {
+    fn cmp(&self, other: &Self) -> core::cmp::Ordering {
+        self.partial_cmp(other).unwrap()
+    }
+}
+*/
