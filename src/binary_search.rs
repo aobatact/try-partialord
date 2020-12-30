@@ -68,6 +68,8 @@ where
                 mid
             };
             size -= half;
+        } else {
+            return None;
         }
     }
     // SAFETY: base is always in [0, size) because base <= mid.

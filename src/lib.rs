@@ -31,7 +31,7 @@
 //! returns [`None`](`core::option::Option::None`).
 //! These traits have `try_` methods like [`try_sort`](`TrySort::try_sort`) for `sort`
 //!
-//! This is safer than using something like `sort_by` with ignoreing None case of [`partial_cmp`](`std::cmp::PartialOrd::partial_cmp`) because it won't panic (if partial_cmp is impremented correctly).
+//! This is safer than using something like `sort_by` with ignoreing None case of [`partial_cmp`](`std::cmp::PartialOrd::partial_cmp`) because it handle error instead of panic.
 //! ```
 //! # #![feature(is_sorted)]
 //! use try_partialord::*;
