@@ -50,7 +50,6 @@
 //! assert!(!vec.is_sorted());
 //! ```
 
-//#![feature(maybe_uninit_slice, is_sorted, min_specialization)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
 mod binary_search;
