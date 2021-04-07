@@ -26,7 +26,7 @@
 
 // ignore-tidy-undocumented-unsafe
 
-//! Helper traits for [`PartialOrd`](`core::cmp::PartialOrd`) like [`f32`], [`f64`] with methods where [`Ord`](`core::cmp::Ord`) is needed like sort, min, max and binarySearch.
+//! Helper traits for [`PartialOrd`](`core::cmp::PartialOrd`) like [`f32`], [`f64`] to use methods where [`Ord`](`core::cmp::Ord`) is needed, like sort, min, max and binarySearch.
 //! These methods are almost same as the methods for Ord, exept that it returns [`InvalidOrderError`] when the [`partial_cmp`](`std::cmp::PartialOrd::partial_cmp`)
 //! returns [`None`](`core::option::Option::None`).
 //! These traits have `try_` methods like [`try_sort`](`TrySort::try_sort`) for `sort`
@@ -50,10 +50,8 @@
 //! assert!(!vec.is_sorted());
 //! ```
 
-#![feature(maybe_uninit_slice, is_sorted, min_specialization)]
-#![no_std]
-#[cfg(feature = "std")]
-extern crate std;
+//#![feature(maybe_uninit_slice, is_sorted, min_specialization)]
+#![cfg_attr(not(feature="std"),no_std)]
 
 mod binary_search;
 mod min_max;

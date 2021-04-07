@@ -319,10 +319,14 @@ where
             debug_assert!(width(l, r) == block_l + block_r);
         }
 
+        fn slice_as_mut_ptr<T>(this: &mut [MaybeUninit<T>]) -> *mut T {
+            this.as_mut_ptr() as *mut T
+        }
+
         if start_l == end_l {
             // Trace `block_l` elements from the left side.
-            start_l = MaybeUninit::slice_as_mut_ptr(&mut offsets_l);
-            end_l = MaybeUninit::slice_as_mut_ptr(&mut offsets_l);
+            start_l = slice_as_mut_ptr(&mut offsets_l);
+            end_l = slice_as_mut_ptr(&mut offsets_l);
             let mut elem = l;
 
             for i in 0..block_l {
@@ -347,8 +351,8 @@ where
 
         if start_r == end_r {
             // Trace `block_r` elements from the right side.
-            start_r = MaybeUninit::slice_as_mut_ptr(&mut offsets_r);
-            end_r = MaybeUninit::slice_as_mut_ptr(&mut offsets_r);
+            start_r = slice_as_mut_ptr(&mut offsets_r);
+            end_r = slice_as_mut_ptr(&mut offsets_r);
             let mut elem = r;
 
             for i in 0..block_r {

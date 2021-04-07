@@ -9,6 +9,7 @@ edition = "2018"
 [features]
 default = ["std"]
 std = []
+unstable = []
 
 [dependencies]
 
