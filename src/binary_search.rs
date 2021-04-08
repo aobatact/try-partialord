@@ -1,7 +1,9 @@
 use crate::{InvalidOrderError, OrderResult};
 use core::cmp::Ordering;
 
-/// Binary Search methods for [`PartialOrd`]
+/// Binary Search methods for [`PartialOrd`].
+/// 
+/// Caution! This might not return error even if there is invalid order value (like [`f32::NAN`]), because including these value means that it is not sorted correctly and we cannot ensure the return value of binary_search for unsorted slice.
 pub trait TryBinarySearch<T> {
     ///[`PartialOrd`] version for [`slice::binary_search`]
     #[inline]

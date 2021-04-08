@@ -9,10 +9,9 @@ These traits have `try_` methods like `try_sort` for `slice::sort`
 This is safer than using something like `sort_by` with ignoreing None case of `partial_cmp` because it handle error instead of panic.
 Sort is using the same logic as std.
 ```
-# #![feature(is_sorted)]
 use try_partialord::*;
-# use rand::distributions::Standard;
-# use rand::prelude::*;
+use rand::distributions::Standard;
+use rand::prelude::*;
 let mut vec: Vec<f32> = Standard.sample_iter(thread_rng()).take(100).collect();
 //no NAN in vec so sort should succed
 let sort_result = vec.try_sort();

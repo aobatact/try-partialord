@@ -41,10 +41,9 @@
 //! This supports `no_std` with no `std` feature flag.
 //!
 //! ```
-//! # #![feature(is_sorted)]
 //! use try_partialord::*;
-//! # use rand::distributions::Standard;
-//! # use rand::prelude::*;
+//! use rand::distributions::Standard;
+//! use rand::prelude::*;
 //!
 //! let mut vec: Vec<f32> = Standard.sample_iter(thread_rng()).take(100).collect();
 //! //no NAN in vec so sort should succed
