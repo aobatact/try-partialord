@@ -1,7 +1,7 @@
 use crate::{InvalidOrderError, OrderResult};
 use core::cmp::Ordering;
 
-/// min and max methods for PratialOrd
+/// Min and max methods for [`PartialOrd`]
 /// ```
 /// use try_partialord::*;
 /// use rand::distributions::Standard;
@@ -18,7 +18,7 @@ use core::cmp::Ordering;
 /// assert!(min.is_err());
 /// ```
 pub trait TryMinMax<T> {
-    /// `PartialOrd` version for as [`Iterator::min`].
+    /// `PartialOrd` version for [`Iterator::min`].
     #[inline]
     fn try_min(self) -> OrderResult<Option<T>>
     where
@@ -27,7 +27,7 @@ pub trait TryMinMax<T> {
     {
         self.try_select_by(|a, b| a.partial_cmp(b), Ordering::Greater)
     }
-    /// `PartialOrd` version for as [`Iterator::min_by`].
+    /// `PartialOrd` version for [`Iterator::min_by`].
     #[inline]
     fn try_min_by<F>(self, compare: F) -> OrderResult<Option<T>>
     where
@@ -36,7 +36,7 @@ pub trait TryMinMax<T> {
     {
         self.try_select_by(compare, Ordering::Greater)
     }
-    /// `PartialOrd` version for as [`Iterator::min_by_key`].
+    /// `PartialOrd` version for [`Iterator::min_by_key`].
     #[inline]
     fn try_min_by_key<K, F>(self, f: F) -> OrderResult<Option<T>>
     where
@@ -47,7 +47,7 @@ pub trait TryMinMax<T> {
         let mut fk = f;
         self.try_select_by(|a, b| fk(a).partial_cmp(&fk(b)), Ordering::Greater)
     }
-    /// `PartialOrd` version for as [`Iterator::max`].
+    /// `PartialOrd` version for [`Iterator::max`].
     #[inline]
     fn try_max(self) -> OrderResult<Option<T>>
     where
@@ -56,7 +56,7 @@ pub trait TryMinMax<T> {
     {
         self.try_select_by(|a, b| a.partial_cmp(b), Ordering::Less)
     }
-    /// `PartialOrd` version for as [`Iterator::max_by`].
+    /// `PartialOrd` version for [`Iterator::max_by`].
     #[inline]
     fn try_max_by<F>(self, compare: F) -> OrderResult<Option<T>>
     where
@@ -65,7 +65,7 @@ pub trait TryMinMax<T> {
     {
         self.try_select_by(compare, Ordering::Less)
     }
-    /// `PartialOrd` version for as [`Iterator::max_by_key`].
+    /// `PartialOrd` version for [`Iterator::max_by_key`].
     #[inline]
     fn try_max_by_key<K, F>(self, f: F) -> OrderResult<Option<T>>
     where

@@ -4,11 +4,11 @@ use core::cmp::Ordering;
 mod std_mergesort;
 mod std_quicksort;
 
-/// Sort methods for PratialOrd
+/// Sort methods for [`PartialOrd`].
 pub trait TrySort<T> {
     #[cfg(feature = "std")]
     #[inline]
-    /// try version for [`slice::sort`]
+    /// [`PartialOrd`] version for [`slice::sort`]
     fn try_sort(&mut self) -> OrderResult<()>
     where
         T: PartialOrd<T>,
@@ -16,13 +16,13 @@ pub trait TrySort<T> {
         self.try_sort_by(ord_as_cmp)
     }
     #[cfg(feature = "std")]
-    /// try version for [`slice::sort_by`]
+    /// [`PartialOrd`] version for [`slice::sort_by`]
     fn try_sort_by<F>(&mut self, compare: F) -> OrderResult<()>
     where
         F: FnMut(&T, &T) -> Option<bool>;
     #[cfg(feature = "std")]
     #[inline]
-    /// try version for [`slice::sort_by_key`]
+    /// [`PartialOrd`] version for [`slice::sort_by_key`]
     fn try_sort_by_key<K, F>(&mut self, f: F) -> OrderResult<()>
     where
         F: FnMut(&T) -> Option<K>,
@@ -31,21 +31,27 @@ pub trait TrySort<T> {
         let mut f2 = f;
         self.try_sort_by(|a, b| f2(a).partial_cmp(&f2(b)).map(|a| a == Ordering::Less))
     }
+    #[cfg(feature = "std")]
+    /// [`PartialOrd`] version for [`slice::sort_by_cached_key`]
+    fn try_sort_by_cached_key<K, F>(&mut self, f: F) -> OrderResult<()>
+    where
+        F: FnMut(&T) -> Option<K>,
+        K: PartialOrd<K>;
 
     #[inline]
-    /// try version for [`slice::sort_unstable`]
+    /// [`PartialOrd`] version for [`slice::sort_unstable`]
     fn try_sort_unstable(&mut self) -> OrderResult<()>
     where
         T: PartialOrd<T>,
     {
         self.try_sort_unstable_by(ord_as_cmp)
     }
-    /// try version for [`slice::sort_unstable_by`]
+    /// [`PartialOrd`] version for [`slice::sort_unstable_by`]
     fn try_sort_unstable_by<F>(&mut self, compare: F) -> OrderResult<()>
     where
         F: FnMut(&T, &T) -> Option<bool>;
     #[inline]
-    /// try version for [`slice::sort_unstable_by_key`]
+    /// [`PartialOrd`] version for [`slice::sort_unstable_by_key`]
     fn try_sort_unstable_by_key<K, F>(&mut self, f: F) -> OrderResult<()>
     where
         F: FnMut(&T) -> Option<K>,
@@ -56,19 +62,19 @@ pub trait TrySort<T> {
     }
 
     #[inline]
-    /// try version for [`slice::is_sorted`]
+    /// [`PartialOrd`] version for [`slice::is_sorted`]
     fn try_is_sorted(&self) -> OrderResult<bool>
     where
         T: PartialOrd<T>,
     {
         self.try_is_sorted_by(ord_as_cmp)
     }
-    /// try version for [`slice::is_sorted_by`]
+    /// [`PartialOrd`] version for [`slice::is_sorted_by`]
     fn try_is_sorted_by<F>(&self, compare: F) -> OrderResult<bool>
     where
         F: FnMut(&T, &T) -> Option<bool>;
     #[inline]
-    /// try version for [`slice::is_sorted_by_key`]
+    /// [`PartialOrd`] version for [`slice::is_sorted_by_key`]
     fn try_is_sorted_by_key<K, F>(&mut self, f: F) -> OrderResult<bool>
     where
         F: FnMut(&T) -> Option<K>,
@@ -104,29 +110,61 @@ impl<T> TrySort<T> for [T] {
     {
         try_is_sorted_by(self, compare)
     }
-}
-/*
-fn try_is_sorted_iter_by<T, I, F>(mut iter: I, compare: F) -> OrderResult<bool>
-where
-    F: FnMut(&T, &T) -> Option<bool>,
-    I: Iterator<Item = T>,
-{
-    let mut cmp = compare;
-    if let Some(mut prev) = iter.next() {
-        for next in iter {
-            if let Some(x) = cmp(&prev, &next) {
-                if !x {
-                    return Ok(false);
+
+    #[cfg(feature = "std")]
+    #[inline]
+    fn try_sort_by_cached_key<K, F>(&mut self, f: F) -> OrderResult<()>
+    where
+        F: FnMut(&T) -> Option<K>,
+        K: PartialOrd<K>,
+    {
+        // Helper macro for indexing our vector by the smallest possible type, to reduce allocation.
+        macro_rules! sort_by_key {
+            ($t:ty, $slice:ident, $f:ident) => {{
+                let mut indices: Vec<_> = $slice
+                    .iter()
+                    .map($f)
+                    .enumerate()
+                    .map(|(i, k)| (k, i as $t))
+                    .collect();
+                // The elements of `indices` are unique, as they are indexed, so any sort will be
+                // stable with respect to the original slice. We use `sort_unstable` here because
+                // it requires less memory allocation.
+                indices.try_sort_unstable()?;
+                for i in 0..$slice.len() {
+                    let mut index = indices[i].1;
+                    while (index as usize) < i {
+                        index = indices[index as usize].1;
+                    }
+                    indices[i].1 = index;
+                    $slice.swap(i, index as usize);
                 }
-                prev = next;
-            } else {
-                return Err(InvalidOrderError);
-            }
+                Ok(())
+            }};
         }
+
+        let sz_u8 = core::mem::size_of::<(K, u8)>();
+        let sz_u16 = core::mem::size_of::<(K, u16)>();
+        let sz_u32 = core::mem::size_of::<(K, u32)>();
+        let sz_usize = core::mem::size_of::<(K, usize)>();
+
+        let len = self.len();
+        if len < 2 {
+            return Ok(());
+        }
+        if sz_u8 < sz_u16 && len <= (u8::MAX as usize) {
+            return sort_by_key!(u8, self, f);
+        }
+        if sz_u16 < sz_u32 && len <= (u16::MAX as usize) {
+            return sort_by_key!(u16, self, f);
+        }
+        if sz_u32 < sz_usize && len <= (u32::MAX as usize) {
+            return sort_by_key!(u32, self, f);
+        }
+        sort_by_key!(usize, self, f)
     }
-    Ok(true)
 }
-*/
+
 fn try_is_sorted_by<T, F>(slice: &[T], compare: F) -> OrderResult<bool>
 where
     F: FnMut(&T, &T) -> Option<bool>,
