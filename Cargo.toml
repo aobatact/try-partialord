@@ -3,6 +3,11 @@ name = "try-partialord"
 version = "0.1.0"
 authors = ["aobatact <aobatact144@gmail.com>"]
 edition = "2018"
+description = "Safe failable sort, min, max, binary_search functions for PartialOrd. No need to wrap f32, f64 to sort any more."
+license = "MIT"
+keywords = ["sort", "PartialOrd"]
+resolver = "2"
+repository = "https://github.com/aobatact/try-partialord"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

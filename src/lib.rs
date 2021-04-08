@@ -26,14 +26,19 @@
 
 // ignore-tidy-undocumented-unsafe
 
-//! Helper traits for type with only [`PartialOrd`] but not [`Ord`]( like [`f32`], [`f64`]), to use methods where [`Ord`](`core::cmp::Ord`) is needed, like sort, min, max and binarySearch.
+//! # try-partialord
+//! No need to wrap [`f32`], [`f64`] to sort any more.
+//!
+//! This crate provides helper traits for type with only [`PartialOrd`] but not [`Ord`]( like [`f32`], [`f64`]), to use methods where [`Ord`](`core::cmp::Ord`) is needed, like sort, min, max and binary_search.
 //! These methods are almost same as the methods for Ord, exept that it returns [`InvalidOrderError`] when the [`partial_cmp`](`std::cmp::PartialOrd::partial_cmp`)
 //! returns [`None`](`core::option::Option::None`).
 //! These traits have `try_` methods like [`try_sort`](`TrySort::try_sort`) for [`slice::sort`]
 //!
 //! This is safer than using something like `sort_by` with ignoreing None case of [`partial_cmp`](`std::cmp::PartialOrd::partial_cmp`) because it handle error instead of panic.
 //!
-//! Most of the code is copied from std.
+//! Sort is using the same logic as std.
+//!
+//! This supports `no_std` with no `std` feature flag.
 //!
 //! ```
 //! # #![feature(is_sorted)]
@@ -69,7 +74,7 @@ pub struct InvalidOrderError;
 
 impl Display for InvalidOrderError {
     fn fmt(&self, fmt: &mut Formatter<'_>) -> Result<(), Error> {
-        fmt.write_str("Failed because of uncompareable value")
+        fmt.write_str("Failed because partial_cmp retrurns None.")
     }
 }
 
