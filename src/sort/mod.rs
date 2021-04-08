@@ -4,7 +4,7 @@ use core::cmp::Ordering;
 mod std_mergesort;
 mod std_quicksort;
 
-/// Sort methods for PratialOrd
+/// Sort methods for [`PartialOrd`].
 pub trait TrySort<T> {
     #[cfg(feature = "std")]
     #[inline]

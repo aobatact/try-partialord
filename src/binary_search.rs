@@ -1,8 +1,9 @@
 use crate::{InvalidOrderError, OrderResult};
 use core::cmp::Ordering;
 
-/// Binary Search methods for PratialOrd
+/// Binary Search methods for [`PartialOrd`]
 pub trait TryBinarySearch<T> {
+    ///[`PartialOrd`] version for [`slice::binary_search`]
     #[inline]
     fn try_binary_search(&self, x: &T) -> OrderResult<Result<usize, usize>>
     where
@@ -10,10 +11,12 @@ pub trait TryBinarySearch<T> {
     {
         self.try_binary_search_by(|a| a.partial_cmp(x))
     }
+    ///[`PartialOrd`] version for [`slice::binary_search_by`]
     fn try_binary_search_by<F>(&self, compare: F) -> OrderResult<Result<usize, usize>>
     where
         F: FnMut(&T) -> Option<Ordering>;
     #[inline]
+    ///[`PartialOrd`] version for [`slice::binary_search_by_key`]
     fn try_binary_search_by_key<K, F>(&self, b: &K, f: F) -> OrderResult<Result<usize, usize>>
     where
         F: FnMut(&T) -> Option<K>,
