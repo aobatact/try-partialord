@@ -51,6 +51,7 @@
 //! let sort_result = vec.try_sort();
 //! assert!(sort_result.is_ok());
 //! assert!(vec.try_is_sorted().unwrap_or(false));
+//!
 //! vec.push(f32::NAN);
 //! //NAN in vec so sort should fail
 //! let sort_result = vec.try_sort();
