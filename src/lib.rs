@@ -26,12 +26,15 @@
 
 // ignore-tidy-undocumented-unsafe
 
-//! Helper traits for [`PartialOrd`](`core::cmp::PartialOrd`) like [`f32`], [`f64`] to use methods where [`Ord`](`core::cmp::Ord`) is needed, like sort, min, max and binarySearch.
+//! Helper traits for type with only [`PartialOrd`] but not [`Ord`]( like [`f32`], [`f64`]), to use methods where [`Ord`](`core::cmp::Ord`) is needed, like sort, min, max and binarySearch.
 //! These methods are almost same as the methods for Ord, exept that it returns [`InvalidOrderError`] when the [`partial_cmp`](`std::cmp::PartialOrd::partial_cmp`)
 //! returns [`None`](`core::option::Option::None`).
-//! These traits have `try_` methods like [`try_sort`](`TrySort::try_sort`) for `sort`
+//! These traits have `try_` methods like [`try_sort`](`TrySort::try_sort`) for [`slice::sort`]
 //!
 //! This is safer than using something like `sort_by` with ignoreing None case of [`partial_cmp`](`std::cmp::PartialOrd::partial_cmp`) because it handle error instead of panic.
+//!
+//! Most of the code is copied from std.
+//!
 //! ```
 //! # #![feature(is_sorted)]
 //! use try_partialord::*;
@@ -42,12 +45,12 @@
 //! //no NAN in vec so sort should succed
 //! let sort_result = vec.try_sort();
 //! assert!(sort_result.is_ok());
-//! assert!(vec.is_sorted());
+//! assert!(vec.try_is_sorted().unwrap_or(false));
 //! vec.push(f32::NAN);
 //! //NAN in vec so sort should fail
 //! let sort_result = vec.try_sort();
 //! assert!(sort_result.is_err());
-//! assert!(!vec.is_sorted());
+//! assert!(vec.try_is_sorted().is_err());
 //! ```
 
 #![cfg_attr(not(feature = "std"), no_std)]
@@ -73,7 +76,15 @@ impl Display for InvalidOrderError {
 #[cfg(feature = "std")]
 impl std::error::Error for InvalidOrderError {}
 
-type OrderResult<T> = Result<T, InvalidOrderError>;
+/// Alias for result
+pub type OrderResult<T> = Result<T, InvalidOrderError>;
+
+fn ord_as_cmp<T>(a: &T, b: &T) -> Option<bool>
+where
+    T: PartialOrd<T>,
+{
+    a.partial_cmp(b).map(|a| a == core::cmp::Ordering::Less)
+}
 
 /*
 pub trait HasOnlyInvalidOrderValue {

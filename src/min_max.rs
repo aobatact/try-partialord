@@ -2,27 +2,80 @@ use crate::{InvalidOrderError, OrderResult};
 use core::cmp::Ordering;
 
 /// min and max methods for PratialOrd
+/// ```
+/// use crate::*;
+/// use rand::distributions::Standard;
+/// use rand::prelude::*;
+///
+/// let rng = thread_rng();
+/// let v: Vec<f32> = Standard.sample_iter(rng).take(100).collect();
+/// let min = v.iter().try_min().unwrap();
+/// assert_eq!(min, v.iter().min_by(|a, b| a.partial_cmp(b).unwrap()));
+///
+/// // min is error because of uncompareabale value `NAN`
+/// v.push(f32::NAN);
+/// let min = v.iter().try_min();
+/// assert!(min.is_err());
+/// ```
 pub trait TryMinMax<T> {
-    fn try_min(&mut self) -> OrderResult<T>
+    /// `PartialOrd` version for as [`Iterator::min`].
+    #[inline]
+    fn try_min(&mut self) -> OrderResult<Option<T>>
     where
-        T: PartialOrd<T>;
-    fn try_min_by<F>(&mut self, compare: F) -> OrderResult<T>
+        T: PartialOrd<T>,
+    {
+        self.try_select_by(|a, b| a.partial_cmp(b), Ordering::Greater)
+    }
+    /// `PartialOrd` version for as [`Iterator::min_by`].
+    #[inline]
+    fn try_min_by<F>(&mut self, compare: F) -> OrderResult<Option<T>>
     where
-        F: FnMut(&T, &T) -> Option<Ordering>;
-    fn try_min_by_key<K, F>(&mut self, f: F) -> OrderResult<T>
+        F: FnMut(&T, &T) -> Option<Ordering>,
+    {
+        self.try_select_by(compare, Ordering::Greater)
+    }
+    /// `PartialOrd` version for as [`Iterator::min_by_key`].
+    #[inline]
+    fn try_min_by_key<K, F>(&mut self, f: F) -> OrderResult<Option<T>>
     where
         F: FnMut(&T) -> Option<K>,
-        K: PartialOrd<K>;
-    fn try_max(&mut self) -> OrderResult<T>
+        K: PartialOrd<K>,
+    {
+        let mut fk = f;
+        self.try_select_by(|a, b| fk(a).partial_cmp(&fk(b)), Ordering::Greater)
+    }
+    /// `PartialOrd` version for as [`Iterator::max`].
+    #[inline]
+    fn try_max(&mut self) -> OrderResult<Option<T>>
     where
-        T: PartialOrd<T>;
-    fn try_max_by<F>(&mut self, compare: F) -> OrderResult<T>
+        T: PartialOrd<T>,
+    {
+        self.try_select_by(|a, b| a.partial_cmp(b), Ordering::Less)
+    }
+    /// `PartialOrd` version for as [`Iterator::max_by`].
+    #[inline]
+    fn try_max_by<F>(&mut self, compare: F) -> OrderResult<Option<T>>
     where
-        F: FnMut(&T, &T) -> Option<Ordering>;
-    fn try_max_by_key<K, F>(&mut self, f: F) -> OrderResult<T>
+        F: FnMut(&T, &T) -> Option<Ordering>,
+    {
+        self.try_select_by(compare, Ordering::Less)
+    }
+    /// `PartialOrd` version for as [`Iterator::max_by_key`].
+    #[inline]
+    fn try_max_by_key<K, F>(&mut self, f: F) -> OrderResult<Option<T>>
     where
         F: FnMut(&T) -> Option<K>,
-        K: PartialOrd<K>;
+        K: PartialOrd<K>,
+    {
+        let mut fk = f;
+        self.try_select_by(|a, b| fk(a).partial_cmp(&fk(b)), Ordering::Less)
+    }
+    /// Base method for getting min or max. `target` is to tell what you want to get is min or max.
+    /// - min -> `Ordering::Greater`
+    /// - max -> `Ordering::Less`
+    fn try_select_by<F>(&mut self, compare: F, target: Ordering) -> OrderResult<Option<T>>
+    where
+        F: FnMut(&T, &T) -> Option<Ordering>;
 }
 
 impl<T, Iter> TryMinMax<T> for Iter
@@ -30,55 +83,11 @@ where
     Iter: Iterator<Item = T>,
 {
     #[inline]
-    fn try_min(&mut self) -> OrderResult<T>
-    where
-        T: PartialOrd<T>,
-    {
-        try_select_by(self, |a, b| a.partial_cmp(b), Ordering::Greater)
-    }
-
-    #[inline]
-    fn try_max(&mut self) -> OrderResult<T>
-    where
-        T: PartialOrd<T>,
-    {
-        try_select_by(self, |a, b| a.partial_cmp(b), Ordering::Less)
-    }
-
-    #[inline]
-    fn try_min_by<F>(&mut self, compare: F) -> OrderResult<T>
+    fn try_select_by<F>(&mut self, compare: F, target: Ordering) -> OrderResult<Option<T>>
     where
         F: FnMut(&T, &T) -> Option<Ordering>,
     {
-        try_select_by(self, compare, Ordering::Greater)
-    }
-
-    #[inline]
-    fn try_max_by<F>(&mut self, compare: F) -> OrderResult<T>
-    where
-        F: FnMut(&T, &T) -> Option<Ordering>,
-    {
-        try_select_by(self, compare, Ordering::Less)
-    }
-
-    #[inline]
-    fn try_min_by_key<K, F>(&mut self, f: F) -> OrderResult<T>
-    where
-        F: FnMut(&T) -> Option<K>,
-        K: PartialOrd<K>,
-    {
-        let mut fk = f;
-        try_select_by(self, |a, b| fk(a).partial_cmp(&fk(b)), Ordering::Greater)
-    }
-
-    #[inline]
-    fn try_max_by_key<K, F>(&mut self, f: F) -> OrderResult<T>
-    where
-        F: FnMut(&T) -> Option<K>,
-        K: PartialOrd<K>,
-    {
-        let mut fk = f;
-        try_select_by(self, |a, b| fk(a).partial_cmp(&fk(b)), Ordering::Less)
+        try_select_by(self, compare, target)
     }
 }
 
@@ -86,7 +95,7 @@ fn try_select_by<T, F>(
     mut iter: impl Iterator<Item = T>,
     compare: F,
     target: Ordering,
-) -> OrderResult<T>
+) -> OrderResult<Option<T>>
 where
     F: FnMut(&T, &T) -> Option<Ordering>,
 {
@@ -96,7 +105,6 @@ where
         (Some(m), n) if compare(&m, &n)? == target => Some(Some(n)),
         (m, _) => Some(m),
     })
-    .flatten()
     .ok_or(InvalidOrderError)
 }
 
@@ -113,10 +121,7 @@ mod tests {
         let rng = thread_rng();
         let v: Vec<f32> = Standard.sample_iter(rng).take(100).collect();
         let min = v.iter().try_min().unwrap();
-        assert_eq!(
-            min,
-            v.iter().min_by(|a, b| a.partial_cmp(b).unwrap()).unwrap()
-        );
+        assert_eq!(min, v.iter().min_by(|a, b| a.partial_cmp(b).unwrap()));
     }
 
     #[test]

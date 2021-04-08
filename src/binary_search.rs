@@ -3,19 +3,6 @@ use core::cmp::Ordering;
 
 /// Binary Search methods for PratialOrd
 pub trait TryBinarySearch<T> {
-    fn try_binary_search(&self, x: &T) -> OrderResult<Result<usize, usize>>
-    where
-        T: PartialOrd<T>;
-    fn try_binary_search_by<F>(&self, compare: F) -> OrderResult<Result<usize, usize>>
-    where
-        F: FnMut(&T) -> Option<Ordering>;
-    fn try_binary_search_by_key<K, F>(&self, b: &K, f: F) -> OrderResult<Result<usize, usize>>
-    where
-        F: FnMut(&T) -> Option<K>,
-        K: PartialOrd<K>;
-}
-
-impl<T> TryBinarySearch<T> for [T] {
     #[inline]
     fn try_binary_search(&self, x: &T) -> OrderResult<Result<usize, usize>>
     where
@@ -23,15 +10,9 @@ impl<T> TryBinarySearch<T> for [T] {
     {
         self.try_binary_search_by(|a| a.partial_cmp(x))
     }
-
-    #[inline]
     fn try_binary_search_by<F>(&self, compare: F) -> OrderResult<Result<usize, usize>>
     where
-        F: FnMut(&T) -> Option<Ordering>,
-    {
-        try_binary_search_by_inner(self, compare).ok_or(InvalidOrderError)
-    }
-
+        F: FnMut(&T) -> Option<Ordering>;
     #[inline]
     fn try_binary_search_by_key<K, F>(&self, b: &K, f: F) -> OrderResult<Result<usize, usize>>
     where
@@ -40,6 +21,16 @@ impl<T> TryBinarySearch<T> for [T] {
     {
         let mut fk = f;
         self.try_binary_search_by(|a| fk(a)?.partial_cmp(b))
+    }
+}
+
+impl<T> TryBinarySearch<T> for [T] {
+    #[inline]
+    fn try_binary_search_by<F>(&self, compare: F) -> OrderResult<Result<usize, usize>>
+    where
+        F: FnMut(&T) -> Option<Ordering>,
+    {
+        try_binary_search_by_inner(self, compare).ok_or(InvalidOrderError)
     }
 }
 
