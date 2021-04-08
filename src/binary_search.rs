@@ -39,45 +39,38 @@ impl<T> TryBinarySearch<T> for [T] {
     }
 }
 
-fn try_binary_search_by_inner<T, F>(slice: &[T], compare: F) -> Option<Result<usize, usize>>
+fn try_binary_search_by_inner<T, F>(slice: &[T], mut compare: F) -> Option<Result<usize, usize>>
 where
     F: FnMut(&T) -> Option<Ordering>,
 {
-    let s = slice;
-    let mut size = s.len();
-    if size == 0 {
-        return Some(Err(0));
-    }
-    let mut compare = compare;
-    let mut base = 0usize;
-    while size > 1 {
-        let half = size / 2;
-        let mid = base + half;
-        // SAFETY: the call is made safe by the following inconstants:
-        // - `mid >= 0`: by definition
-        // - `mid < size`: `mid = size / 2 + size / 4 + size / 8 ...`
-        let cmp = compare(unsafe { s.get_unchecked(mid) });
-        if let Some(cmp_1) = cmp {
-            base = if cmp_1 == Ordering::Greater {
-                base
-            } else {
-                mid
-            };
-            size -= half;
+    let mut size = slice.len();
+    let mut left = 0;
+    let mut right = size;
+    while size > 0 {
+        let mid = left + size / 2;
+
+        // SAFETY: the call is made safe by the following invariants:
+        // - `mid >= 0`
+        // - `mid < size`: `mid` is limited by `[left; right)` bound.
+        let cmp = compare(unsafe { slice.get_unchecked(mid) })?;
+
+        // The reason why we use if/else control flow rather than match
+        // is because match reorders comparison operations, which is perf sensitive.
+        // This is x86 asm for u8: https://rust.godbolt.org/z/8Y8Pra.
+
+        if cmp == Ordering::Less {
+            left = mid + 1;
+        } else if cmp == Ordering::Greater {
+            right = mid;
         } else {
-            return None;
+            // SAFETY: same as the `get_unchecked` above
+            //unsafe { core::intrinsics::assume(mid < slice.len()) };
+            return Some(Ok(mid));
         }
+
+        size = right - left;
     }
-    // SAFETY: base is always in [0, size) because base <= mid.
-    if let Some(cmp) = compare(unsafe { s.get_unchecked(base) }) {
-        Some(if cmp == Ordering::Equal {
-            Ok(base)
-        } else {
-            Err(base + (cmp == Ordering::Less) as usize)
-        })
-    } else {
-        return None;
-    }
+    Some(Err(left))
 }
 
 #[cfg(test)]

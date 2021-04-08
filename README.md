@@ -1,12 +1,14 @@
 # try-partialOrd
 
-No need to wrap `f32`, `f64` to sort any more.
+__Safe failable sort, min, max, binary_search functions for PartialOrd. No need to wrap `f32`, `f64` to sort any more.__
+
 
 This crate provides helper traits for type with only `PartialOrd` but not `Ord`( like `f32`, `f64`), to use methods where `Ord` is needed, like sort, min, max and binary_search.
 These methods are almost same as the methods for Ord, exept that it returns `InvalidOrderError` when the `partial_cmp`
 returns `None`.
-These traits have `try_` methods like `try_sort` for `slice::sort`
+These traits have `try_` methods like `try_sort` for `slice::sort`.
 This is safer than using something like `sort_by` with ignoreing None case of `partial_cmp` because it handle error instead of panic.
+
 Sort is using the same logic as std.
 ```
 use try_partialord::*;
@@ -23,4 +25,3 @@ let sort_result = vec.try_sort();
 assert!(sort_result.is_err());
 assert!(vec.try_is_sorted().is_err());
 ```
-

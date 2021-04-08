@@ -26,8 +26,7 @@
 
 // ignore-tidy-undocumented-unsafe
 
-//! # try-partialord
-//! No need to wrap [`f32`], [`f64`] to sort any more.
+//! __Safe failable sort, min, max, binary_search functions for PartialOrd. No need to wrap `f32`, `f64` to sort any more.__
 //!
 //! This crate provides helper traits for type with only [`PartialOrd`] but not [`Ord`]( like [`f32`], [`f64`]), to use methods where [`Ord`](`core::cmp::Ord`) is needed, like sort, min, max and binary_search.
 //! These methods are almost same as the methods for Ord, exept that it returns [`InvalidOrderError`] when the [`partial_cmp`](`std::cmp::PartialOrd::partial_cmp`)

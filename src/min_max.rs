@@ -77,8 +77,8 @@ pub trait TryMinMax<T> {
         self.try_select_by(|a, b| fk(a).partial_cmp(&fk(b)), Ordering::Less)
     }
     /// Base method for getting min or max. `target` is to tell what you want to get is min or max.
-    /// - min -> `Ordering::Greater`
-    /// - max -> `Ordering::Less`
+    /// - min -> [`Ordering::Greater`]
+    /// - max -> [`Ordering::Less`]
     fn try_select_by<F>(self, compare: F, target: Ordering) -> OrderResult<Option<T>>
     where
         F: FnMut(&T, &T) -> Option<Ordering>;
