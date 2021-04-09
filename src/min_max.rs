@@ -86,14 +86,14 @@ pub trait TryMinMax<T> {
 
 impl<T, Iter> TryMinMax<T> for Iter
 where
-    Iter: Iterator<Item = T>,
+    Iter: IntoIterator<Item = T>,
 {
     #[inline]
     fn try_select_by<F>(self, compare: F, target: Ordering) -> OrderResult<Option<T>>
     where
         F: FnMut(&T, &T) -> Option<Ordering>,
     {
-        try_select_by(self, compare, target)
+        try_select_by(self.into_iter(), compare, target)
     }
 }
 
@@ -106,12 +106,16 @@ where
     F: FnMut(&T, &T) -> Option<Ordering>,
 {
     let mut compare = compare;
-    iter.try_fold(None, |a: Option<T>, b| match (a, b) {
-        (None, n) => Some(Some(n)),
-        (Some(m), n) if compare(&m, &n)? == target => Some(Some(n)),
-        (m, _) => Some(m),
-    })
-    .ok_or(InvalidOrderError)
+    if let Some(first) = iter.next() {
+        match iter.try_fold(first, |a, b| {
+            Some(if compare(&a, &b)? == target { b } else { a })
+        }) {
+            None => Err(InvalidOrderError),
+            x => Ok(x), //some
+        }
+    } else {
+        Ok(None)
+    }
 }
 
 #[cfg(test)]
@@ -128,6 +132,11 @@ mod tests {
         let v: Vec<f32> = Standard.sample_iter(rng).take(100).collect();
         let min = v.iter().try_min().unwrap();
         assert_eq!(min, v.iter().min_by(|a, b| a.partial_cmp(b).unwrap()));
+        let min = v.iter().try_min().unwrap();
+        assert_eq!(
+            min.as_deref(),
+            v.iter().min_by(|a, b| a.partial_cmp(b).unwrap())
+        );
 
         let iter = &mut v.iter();
         let min = iter.try_min().unwrap();

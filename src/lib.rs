@@ -65,7 +65,7 @@ mod sort;
 pub use binary_search::TryBinarySearch;
 use core::fmt::{Display, Error, Formatter};
 pub use min_max::TryMinMax;
-pub use sort::TrySort;
+pub use sort::*;
 
 /// Error when [`partial_cmp`](`std::cmp::PartialOrd::partial_cmp`) returns [`None`] during the operation.
 #[derive(Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Default, Debug)]
@@ -89,29 +89,3 @@ where
 {
     a.partial_cmp(b).map(|a| a == core::cmp::Ordering::Less)
 }
-
-/*
-pub trait HasOnlyInvalidOrderValue {
-    fn is_invalid(&self) -> bool;
-    fn as_ordered(self) -> Option<Ordered<Self>>
-    where
-        Self: Sized,
-    {
-        if self.is_invalid() {
-            Some(Ordered(self))
-        } else {
-            None
-        }
-    }
-}
-
-#[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd)]
-pub struct Ordered<T>(T);
-
-impl<T: core::cmp::PartialEq> Eq for Ordered<T> {}
-impl<T: core::cmp::PartialOrd> Ord for Ordered<T> {
-    fn cmp(&self, other: &Self) -> core::cmp::Ordering {
-        self.partial_cmp(other).unwrap()
-    }
-}
-*/

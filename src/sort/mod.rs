@@ -108,7 +108,7 @@ impl<T> TrySort<T> for [T] {
     where
         F: FnMut(&T, &T) -> Option<bool>,
     {
-        try_is_sorted_by(self, compare)
+        try_is_sorted_by_slice(self, compare)
     }
 
     #[cfg(feature = "std")]
@@ -165,7 +165,8 @@ impl<T> TrySort<T> for [T] {
     }
 }
 
-fn try_is_sorted_by<T, F>(slice: &[T], compare: F) -> OrderResult<bool>
+/// Function to check whether slice is sorted.
+pub fn try_is_sorted_by_slice<T, F>(slice: &[T], compare: F) -> OrderResult<bool>
 where
     F: FnMut(&T, &T) -> Option<bool>,
 {
@@ -183,6 +184,28 @@ where
                 } else {
                     return Err(InvalidOrderError);
                 }
+            }
+        }
+    }
+    Ok(true)
+}
+
+/// Function to check whether iter is sorted.
+pub fn try_is_sorted_by<T, I, F>(mut iter: I, compare: F) -> OrderResult<bool>
+where
+    F: FnMut(&T, &T) -> Option<bool>,
+    I: Iterator<Item = T>,
+{
+    let mut cmp = compare;
+    if let Some(mut prev) = iter.next() {
+        for next in iter {
+            if let Some(x) = cmp(&prev, &next) {
+                if !x {
+                    return Ok(false);
+                }
+                prev = next;
+            } else {
+                return Err(InvalidOrderError);
             }
         }
     }
