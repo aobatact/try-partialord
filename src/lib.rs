@@ -58,6 +58,7 @@
 //! ```
 
 #![cfg_attr(not(feature = "std"), no_std)]
+#![cfg_attr(feature = "try_v2", feature(try_trait_v2, try_trait_v2_residual))]
 
 mod binary_search;
 mod min_max;
